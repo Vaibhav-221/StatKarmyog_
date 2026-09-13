@@ -27,6 +27,7 @@ export const NAVIGATION_CONFIG = [
     label: 'Portal Overview',
     icon: <HomeOutlined />,
     exact: true,
+    public: true,
   },
   {
     key: '/dashboard',
@@ -133,21 +134,28 @@ export const NAVIGATION_CONFIG = [
   {
     key: '/admin',
     path: '/admin',
-    label: 'Admin View (Training Intel)',
+    label: 'Admin View',
     icon: <BarChartOutlined />,
     adminOnly: true,
   },
 ];
 
+const ADMIN_NAV_KEYS = new Set(['/admin', '/profile', 'learning_group']);
+
 /**
  * Filter navigation items based on current user role/permissions.
  */
 export function getAuthorizedNavItems(user) {
+  if (!user) {
+    return NAVIGATION_CONFIG.filter((item) => Boolean(item.public));
+  }
+
+  if (user?.role === 'admin') {
+    return NAVIGATION_CONFIG.filter((item) => ADMIN_NAV_KEYS.has(item.key));
+  }
+
   return NAVIGATION_CONFIG.filter((item) => {
-    if (item.adminOnly && user?.role !== 'admin') {
-      return false;
-    }
-    return true;
+    return !item.adminOnly && !item.public;
   });
 }
 
