@@ -37,7 +37,7 @@ class OfficerDetail(BaseModel):
 
 class ProfilePhotoResponse(BaseModel):
     officer_id: str
-    profile_photo_url: str
+    profile_photo_url: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -282,6 +282,7 @@ class QuizSubmitResponse(BaseModel):
 class CompetencyHistoryPoint(BaseModel):
     recorded_on: str
     combined_score: float
+    expected_level: float | None = None
     confidence_level: str
     source: str
 

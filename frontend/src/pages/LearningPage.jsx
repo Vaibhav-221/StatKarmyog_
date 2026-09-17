@@ -3,13 +3,13 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Row, Col, Card, Typography, Tag, Button, Progress, Space, Alert, Empty, Skeleton } from 'antd';
-import { BookOutlined, RocketOutlined, ClockCircleOutlined, TrophyOutlined } from '@ant-design/icons';
+import { Typography, Tag, Button, Progress, Alert, Empty, Skeleton } from 'antd';
+import { BookOutlined, RocketOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getGapAnalysis, getRecommendations, getEnrollments, getCourses } from '../api/client';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 export default function LearningPage() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function LearningPage() {
   const [gaps, setGaps] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [courses, setCourses] = useState([]);
-
+ 
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -64,96 +64,96 @@ export default function LearningPage() {
   }, [recommendations, gaps, enrollments, courses]);
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-5 sm:space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
-          RECOMMENDED LEARNING
-        </Title>
-        <Text type="secondary">
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
+          Recommended Learning
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#617487]">
           Personalized training modules targeted directly to your highest identified competency gaps.
-        </Text>
+        </p>
       </div>
 
+      {/* Info Alert */}
       <Alert
-        message="Gap-Driven Learning Path"
-        description="Courses are dynamically ranked based on your required vs. current competency gap size (60% Quiz / 40% Work Artifact weighted)."
+        message={<span className="text-sm font-semibold text-[#0B2641] sm:text-base">Gap-Driven Learning Curriculum</span>}
+        description={<span className="text-xs leading-5 text-[#617487] sm:text-sm">Courses are ranked from your required versus current competency gap using the 60% Quiz / 40% Work Artifact evidence model.</span>}
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        className="!mb-2 !rounded-xl !border-[#B8D4EA] !bg-[#F0F7FF] !px-3 !py-3 sm:!mb-4 sm:!px-4"
       />
 
-      <Row gutter={[24, 24]}>
+      {/* Course Cards Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:gap-5 md:grid-cols-2 xl:grid-cols-3">
         {loading ? (
-          <Col span={24}>
-            <Card bordered={false} style={{ borderRadius: 10 }}>
-              <Skeleton active paragraph={{ rows: 8 }} />
-            </Card>
-          </Col>
+          <div className="col-span-full rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm sm:p-6">
+            <Skeleton active paragraph={{ rows: 8 }} />
+          </div>
         ) : rows.length === 0 ? (
-          <Col span={24}>
-            <Card bordered={false} style={{ borderRadius: 10 }}>
-              <Empty description="No learning recommendations found for this officer" />
-            </Card>
-          </Col>
+          <div className="col-span-full rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm sm:p-6">
+            <Empty description="No learning recommendations found for this officer" />
+          </div>
         ) : rows.map((course) => (
-          <Col xs={24} md={12} lg={8} key={course.course_id}>
-            <Card
-              bordered={false}
-              style={{
-                borderRadius: 10,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <Tag color="navy" style={{ background: '#0C447C', color: '#fff' }}>
-                    {course.provider}
-                  </Tag>
-                  <Tag color="orange">{course.gap === null ? 'Gap: backend-ranked' : `Gap: ${course.gap} pts`}</Tag>
-                </div>
-
-                <Title level={4} style={{ color: '#0C447C', fontSize: 16, marginTop: 4, minHeight: 44 }}>
-                  {course.course_title}
-                </Title>
-
-                <Space style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>
-                  <span><BookOutlined /> {course.competency}</span>
-                  <span>•</span>
-                  <span><ClockCircleOutlined /> {course.duration}</span>
-                </Space>
-
-                <Paragraph style={{ background: '#F8FAFC', padding: 10, borderRadius: 6, fontSize: 12, color: '#334155' }}>
-                  "{course.reason}"
-                </Paragraph>
-
-                {course.progress > 0 && (
-                  <div style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
-                      <span>Progress</span>
-                      <span>{course.progress}%</span>
-                    </div>
-                    <Progress percent={course.progress} strokeColor="#0C447C" showInfo={false} size="small" />
-                  </div>
-                )}
+          <div
+            key={course.course_id}
+            className="flex min-w-0 flex-col justify-between rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm transition-all hover:border-[#2966A3]/30 hover:shadow-md sm:p-5"
+          >
+            <div>
+              {/* Provider + Gap Badge */}
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <span className="rounded-md bg-[#0B2641] px-2.5 py-1 text-[10px] font-bold text-white sm:text-xs">
+                  {course.provider}
+                </span>
+                <span className="rounded-md border border-[#F5D485] bg-[#FEF9EE] px-2.5 py-1 text-[10px] font-semibold text-[#BA7517] sm:text-xs">
+                  {course.gap === null ? 'Ranked' : `Gap: ${course.gap} pts`}
+                </span>
               </div>
 
-              <Button
-                type="primary"
-                icon={<RocketOutlined />}
-                onClick={() => navigate('/igot')}
-                style={{ background: '#0C447C', marginTop: 16, width: '100%' }}
-              >
-                {course.progress > 0 ? 'Continue Learning' : 'Start Learning'}
-              </Button>
-            </Card>
-          </Col>
+              {/* Title */}
+              <h3 className="mb-2 mt-2 line-clamp-2 text-base font-bold leading-6 text-[#0B2641]">
+                {course.course_title}
+              </h3>
+
+              {/* Meta */}
+              <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#617487]">
+                <span className="flex min-w-0 max-w-full items-center gap-1 font-medium">
+                  <BookOutlined className="text-[#2966A3]" /> {course.competency}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ClockCircleOutlined /> {course.duration}
+                </span>
+              </div>
+
+              {/* Reason */}
+              <p className="mb-4 rounded-xl border border-[#DCE7F0] bg-[#F8FBFD] p-3 text-xs leading-relaxed text-[#172B3D]">
+                &quot;{course.reason}&quot;
+              </p>
+
+              {/* Progress */}
+              {course.progress > 0 && (
+                <div className="mb-4 rounded-lg border border-[#E7F1F8] bg-[#F8FBFD] p-2.5">
+                  <div className="flex justify-between text-xs font-medium text-[#617487] mb-1">
+                    <span>Progress</span>
+                    <span className="font-bold text-[#2966A3]">{course.progress}%</span>
+                  </div>
+                  <Progress percent={course.progress} strokeColor="#2966A3" showInfo={false} size="small" />
+                </div>
+              )}
+            </div>
+
+            {/* CTA */}
+            <Button
+              type="primary"
+              icon={<RocketOutlined />}
+              onClick={() => navigate('/igot')}
+              className="!h-10 !w-full !rounded-xl !bg-[#2966A3] !text-xs !font-semibold hover:!bg-[#0B2641] mt-2"
+            >
+              {course.progress > 0 ? 'Continue Learning' : 'Start Learning Module'}
+            </Button>
+          </div>
         ))}
-      </Row>
+      </div>
     </div>
   );
 }

@@ -34,6 +34,23 @@ export function buildAssetUrl(url) {
   return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+/**
+ * Wait for FastAPI startup before entering authenticated routes.
+ * This prevents the first dashboard request from racing database/index setup.
+ */
+export async function waitForBackendReady({ attempts = 8, delayMs = 500 } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const res = await api.get('/api/health', { timeout: 3000 });
+      if (res.data?.status === 'ok') return true;
+    } catch {
+      if (attempt === attempts - 1) return false;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return false;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCK DATA — matches Pydantic schemas from app/schemas/schemas.py
 // Modeled after OFF001 (Rakesh Kumar) from officer_profiles.json
@@ -194,13 +211,15 @@ export async function getGapAnalysis(officerId) {
 }
 
 /**
- * Fetch hybrid semantic course recommendations.
+ * Fetch fast course recommendations for the dashboard.
+ * The dashboard should not block first paint on cold sentence-transformer loading;
+ * semantic recommendations remain available through the dedicated backend route.
  * @param {string} officerId
  * @returns {Promise<{data: object[], isMock: boolean}>}
  */
 export async function getRecommendations(officerId) {
   try {
-    const res = await api.get(`/api/officers/${officerId}/recommendations/semantic`, {
+    const res = await api.get(`/api/officers/${officerId}/recommendations`, {
       params: { top_n: 6 },
     });
     return { data: res.data, isMock: false };
@@ -307,6 +326,15 @@ export async function uploadProfilePhoto(officerId, file) {
       error: true,
       message: extractErrorMessage(err),
     };
+  }
+}
+
+export async function removeProfilePhoto(officerId) {
+  try {
+    const res = await api.delete(`/api/officers/${officerId}/profile-photo`);
+    return { data: res.data, isMock: false };
+  } catch (err) {
+    return { data: null, isMock: false, error: true, message: extractErrorMessage(err) };
   }
 }
 
@@ -433,8 +461,8 @@ export async function uploadArtifact(formData) {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return { data: res.data, isMock: false };
-  } catch {
-    return { data: null, isMock: false, error: true };
+  } catch (err) {
+    return { data: null, isMock: false, error: true, message: extractErrorMessage(err) };
   }
 }
 
