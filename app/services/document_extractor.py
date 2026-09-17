@@ -18,12 +18,12 @@ logger = logging.getLogger(__name__)
 SUPPORTED_EXTENSIONS = {".pdf", ".pptx", ".docx", ".txt", ".md"}
 
 # Minimum extractable text length (characters)
-MIN_TEXT_LENGTH = 200
+MIN_TEXT_LENGTH = 100
 PDF_MIN_TEXT_LENGTH = 40
 
 # Maximum text length sent to the LLM (characters) — prototype cap to
 # avoid excessive token cost.  ~12 000 chars ≈ ~3 000 tokens.
-MAX_TEXT_LENGTH = 12_000
+MAX_TEXT_LENGTH = 200_000
 
 
 def _clean_text(text: str) -> str:
@@ -162,12 +162,13 @@ async def extract_text(file: UploadFile) -> str:
         raise
     text = _clean_text(text)
 
-    min_length = PDF_MIN_TEXT_LENGTH if ext == ".pdf" else MIN_TEXT_LENGTH
+    min_length = MIN_TEXT_LENGTH
     if len(text) < min_length:
         if ext == ".pdf":
             raise ValueError(
-                "Could not extract readable text from this PDF. "
-                "The document may be scanned/image-based, protected, or too short."
+                "Unable to extract readable text from this PDF. "
+                "The document may be scanned/image-based, encrypted, or too short. "
+                "Please upload a text-based learning material PDF."
             )
         raise ValueError(
             "Document has no extractable text (or text is too short — "

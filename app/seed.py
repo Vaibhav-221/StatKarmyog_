@@ -13,6 +13,7 @@ import math
 from pathlib import Path
 
 from app.db import engine, SessionLocal, Base
+from app.schema_migrations import ensure_lightweight_schema_upgrades
 from app.models.models import (
     Officer,
     Role,
@@ -429,27 +430,10 @@ def _seed_officer_artifact_assignments(session) -> None:
                 )
 
 
-def _ensure_lightweight_schema_upgrades() -> None:
-    """Add nullable columns needed by newer code when an older SQLite DB exists."""
-    if not str(engine.url).startswith("sqlite"):
-        return
-    with engine.begin() as conn:
-        rows = conn.exec_driver_sql("PRAGMA table_info(quiz_attempts)").fetchall()
-        columns = {row[1] for row in rows}
-        if rows and "artifact_id" not in columns:
-            conn.exec_driver_sql("ALTER TABLE quiz_attempts ADD COLUMN artifact_id VARCHAR")
-        if rows and "target_competency" not in columns:
-            conn.exec_driver_sql("ALTER TABLE quiz_attempts ADD COLUMN target_competency VARCHAR")
-        officer_rows = conn.exec_driver_sql("PRAGMA table_info(officers)").fetchall()
-        officer_columns = {row[1] for row in officer_rows}
-        if officer_rows and "profile_photo_url" not in officer_columns:
-            conn.exec_driver_sql("ALTER TABLE officers ADD COLUMN profile_photo_url VARCHAR")
-
-
 def seed_database(session=None) -> None:
     """Create all tables and populate with seed data (idempotent)."""
     Base.metadata.create_all(bind=engine)
-    _ensure_lightweight_schema_upgrades()
+    ensure_lightweight_schema_upgrades(engine)
 
     close_session = False
     if session is None:

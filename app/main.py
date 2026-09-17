@@ -24,6 +24,7 @@ from app.routers.webhooks import router as webhook_router
 from app.routers.quiz import router as quiz_router
 from app.schemas.schemas import CompetencyScoreItem, PassportResponse
 from app.seed import seed_database
+from app.schema_migrations import ensure_lightweight_schema_upgrades
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -52,6 +53,7 @@ def _semantic_search_enabled() -> bool:
 async def lifespan(app: FastAPI):
     """Create tables, seed the database, and build the semantic index."""
     Base.metadata.create_all(bind=engine)
+    ensure_lightweight_schema_upgrades(engine)
     seed_database()
 
     # Build ChromaDB course embeddings (idempotent). Disable on low-memory hosts.
@@ -65,6 +67,11 @@ async def lifespan(app: FastAPI):
             db.close()
     else:
         logger.info("Semantic search disabled; skipping ChromaDB index build.")
+
+    # Pre-warm embedding model in background for document RAG (non-blocking)
+    import asyncio
+    from app.services.document_rag import preload_embedding_model
+    asyncio.create_task(asyncio.to_thread(preload_embedding_model))
 
     yield
 
